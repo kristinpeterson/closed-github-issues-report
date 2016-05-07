@@ -1,0 +1,10 @@
+[
+    { 
+        "name": "repo-name",
+        "owner": "repo-owner"
+    },
+    { 
+        "name": "another-repo-name",
+        "owner": "another-repo-owner"
+    }
+]
