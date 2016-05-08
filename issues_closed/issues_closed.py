@@ -115,7 +115,7 @@ def prepare_issue_report(report_weeks, report_end_date):
 
             for pr in data:
                 pr_closed_at = dateutil.parser.parse(pr['closed_at']).date()
-                if week_end_date >= pr_closed_at > week_end_date - timedelta(days = 7):
+                if week_end_date >= pr_closed_at >= week_start_date:
                     if updated is False:
                         updated = True
                         report.write("--------------------------------------\n" + data_file.replace("_", "/") + ":\n--------------------------------------\n\n")
