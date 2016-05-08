@@ -94,7 +94,7 @@ def parse_link_header(link):
 def prepare_issue_report(report_weeks, report_end_date):
     """
     Prepares github issue data into a single file report 
-    which is timestamped and saved to the output directory
+    which is timestamped and saved to the OUTPUT_DIRECTORY
     """
     print "preparing report..."
     report = open(OUTPUT_DIRECTORY + "/report-" + time.strftime("%Y-%m-%dT%H:%M:%SZ") + ".txt", 'w')
