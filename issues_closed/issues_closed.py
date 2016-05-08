@@ -6,7 +6,8 @@ import os
 import time
 from datetime import date, timedelta
 
-DATA_DIRECTORY = "data/"
+DATA_DIRECTORY = "data"
+OUTPUT_DIRECTORY = "output"
 GITHUB_BASE_URL = "https://api.github.com/repos/"
 
 def run(settings, report_weeks, report_start_date, report_end_date):
@@ -19,9 +20,19 @@ def run(settings, report_weeks, report_start_date, report_end_date):
     report_end_date -- datetime.date object representing the end date of the report
     """
     headers = { 'Authorization': 'token ' + settings["github_access_token"] }
+    create_directories()
     get_issue_data(headers, report_start_date)
     prepare_issue_report(report_weeks, report_end_date)
     cleanup_data_dir()
+
+def create_directories():
+    """
+    Creates DATA_DIRECTORY & OUTPUT_DIRECTORY if not exists
+    """
+    if not os.path.exists(DATA_DIRECTORY):
+        os.makedirs(DATA_DIRECTORY)
+    if not os.path.exists(OUTPUT_DIRECTORY):
+        os.makedirs(OUTPUT_DIRECTORY)
 
 def get_issue_data(headers, start_date):
     """
@@ -50,7 +61,7 @@ def get_issue_data(headers, start_date):
             except Exception:
                 continue_paging = False
 
-        with open(DATA_DIRECTORY + repo['owner'] + "_" + repo['name'], 'w') as outfile:
+        with open(DATA_DIRECTORY + "/" + repo['owner'] + "_" + repo['name'], 'w') as outfile:
             json.dump(json_data, outfile)
 
 def get_repos():
@@ -86,7 +97,7 @@ def prepare_issue_report(report_weeks, report_end_date):
     which is timestamped and saved to the output directory
     """
     print "preparing report..."
-    report = open("output/report-" + time.strftime("%Y-%m-%dT%H:%M:%SZ") + ".txt", 'w')
+    report = open(OUTPUT_DIRECTORY + "/report-" + time.strftime("%Y-%m-%dT%H:%M:%SZ") + ".txt", 'w')
     i = 0
     while i < report_weeks:
         week_end_date = report_end_date - timedelta(days = i * 7)
@@ -122,4 +133,4 @@ def cleanup_data_dir():
     print "cleaning up data directory..."
     file_list = [ f for f in os.listdir(DATA_DIRECTORY) ]
     for f in file_list:
-        os.remove(DATA_DIRECTORY + f)
+        os.remove(DATA_DIRECTORY + "/" + f)
