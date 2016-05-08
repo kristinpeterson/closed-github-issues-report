@@ -43,6 +43,6 @@ python main.py <report_weeks> <report_start_date> <report_end_date>
 
 Command line arguments:
 
-* <report_weeks> (required) number of weeks to include in the report
-* <report_start_date> (required) start date of report formatted as YYYY-MM-DD (Monday)
-* <report_end_date> (required) end date of report formatted as YYYY-MM-DD (Sunday)
+* `report_weeks` (required) number of weeks to include in the report
+* `report_start_date` (required) start date of report formatted as YYYY-MM-DD (Monday)
+* `report_end_date` (required) end date of report formatted as YYYY-MM-DD (Sunday)
