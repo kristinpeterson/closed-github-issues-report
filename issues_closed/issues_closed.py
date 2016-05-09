@@ -13,7 +13,7 @@ GITHUB_BASE_URL = "https://api.github.com/repos/"
 
 def run():
     """
-    Generates a report of all closed github issues for att-projects repos.
+    Generates a report of all closed github issues for repos in `repos.json`
     """
     create_directories()
     store_issue_data()
