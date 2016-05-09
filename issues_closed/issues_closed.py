@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 import requests
 import json
 import dateutil.parser
@@ -10,19 +11,13 @@ DATA_DIRECTORY = "data"
 OUTPUT_DIRECTORY = "output"
 GITHUB_BASE_URL = "https://api.github.com/repos/"
 
-def run(settings, report_weeks, report_start_date, report_end_date):
+def run():
     """
     Generates a report of all closed github issues for att-projects repos.
-
-    Keyword Arguments:
-    settings -- an array of settings variables, derived from `/settings.txt`
-    report_weeks -- the number of weeks worth of posts to include in the report
-    report_end_date -- datetime.date object representing the end date of the report
     """
-    headers = { 'Authorization': 'token ' + settings["github_access_token"] }
     create_directories()
-    get_issue_data(headers, report_start_date)
-    prepare_issue_report(report_weeks, report_end_date)
+    get_issue_data()
+    write_issue_report()
     cleanup_data_dir()
 
 def create_directories():
@@ -34,20 +29,17 @@ def create_directories():
     if not os.path.exists(OUTPUT_DIRECTORY):
         os.makedirs(OUTPUT_DIRECTORY)
 
-def get_issue_data(headers, start_date):
+def get_issue_data():
     """
     Gets repo issue data and saves to DATA_DIRECTORY, one file per repository.
     Note that the data files saved are temporary and will be deleted.
-
-    Keyword Arguments:
-    headers -- headers used when making request to GitHub
-    start_date -- all issues closed since this date will be retrieved
     """
     print "iterating over repos and saving closed issue data to data files..."
     repos = get_repos()
+    headers = { 'Authorization': 'token ' + get_github_access_token() }
     
     for repo in repos:
-        issues_url = GITHUB_BASE_URL + repo['owner'] + "/" + repo['name'] + "/issues?state=closed&per_page=100&since=" + start_date
+        issues_url = GITHUB_BASE_URL + repo['owner'] + "/" + repo['name'] + "/issues?state=closed&per_page=100&since=" + get_report_start_date()
         github_response = requests.get(issues_url, headers=headers)
         
         json_data = github_response.json()
@@ -91,7 +83,7 @@ def parse_link_header(link):
         links[rel] = url
     return links
 
-def prepare_issue_report(report_weeks, report_end_date):
+def write_issue_report():
     """
     Prepares github issue data into a single file report 
     which is timestamped and saved to the OUTPUT_DIRECTORY
@@ -99,6 +91,8 @@ def prepare_issue_report(report_weeks, report_end_date):
     print "preparing report..."
     report = open(OUTPUT_DIRECTORY + "/report-" + time.strftime("%Y-%m-%dT%H:%M:%SZ") + ".txt", 'w')
     i = 0
+    report_weeks = get_report_weeks()
+    report_end_date = get_report_end_date()
     while i < report_weeks:
         week_end_date = report_end_date - timedelta(days = i * 7)
         week_start_date = week_end_date - timedelta(days = 6)
@@ -134,3 +128,56 @@ def cleanup_data_dir():
     file_list = [ f for f in os.listdir(DATA_DIRECTORY) ]
     for f in file_list:
         os.remove(DATA_DIRECTORY + "/" + f)
+
+def get_github_access_token():
+    settings = get_settings()
+    return settings["github_access_token"]
+
+def get_settings():
+    """
+    Create a dictionary of settings from settings.txt
+    """
+    settings = {}
+    try:
+        with open('settings.txt', 'r') as settings_file:
+            for line in settings_file:
+                kv = line.partition("=")
+                settings[kv[0]] = kv[2].replace("\n", "")
+        return settings
+    except:
+        print "settings.txt missing or not set up properly. Please see README for setup instructions."
+        sys.exit()
+
+def get_report_weeks():
+    try:
+        return int(sys.argv[1])
+    except:
+        print "<report_weeks> required. Run with '--help' option for usage instructions."
+        sys.exit()
+
+def get_report_start_date():
+    """
+    Gets <report_start_date> command line argument and returns the date as an 
+    ISO formatted timestamp to be passed to GitHub API when retreiving issues
+    """
+    try:
+        report_start_date = sys.argv[2]
+        iso_formatted_timestamp = report_start_date + "T00:00:00Z"
+        return iso_formatted_timestamp
+    except:
+        print "<report_start_date> required. Run with '--help' option for usage instructions."
+        sys.exit()
+
+def get_report_end_date():
+    """
+    Gets the report_end_date and returns it as a datetime object
+    """
+    try:
+        report_end_date = sys.argv[3].split("-")
+        year = int(report_end_date[0])
+        month =  int(report_end_date[1])
+        day = int(report_end_date[2])
+        return date(year, month, day)
+    except:
+        print "<report_end_date> required. Run with '--help' option for usage instructions."
+        sys.exit()
