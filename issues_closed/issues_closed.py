@@ -108,9 +108,9 @@ def write_issue_report():
             repo_header_added = False
 
             with open("data/" + repo_data_file) as df:    
-                data = json.load(df)
+                repo_data = json.load(df)
 
-            for issue in data:
+            for issue in repo_data:
                 issue_closed_at = dateutil.parser.parse(issue['closed_at']).date()
                 if week_end_date >= issue_closed_at >= week_start_date:
                     if not repo_header_added:
