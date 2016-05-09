@@ -7,16 +7,21 @@ import os
 import time
 from datetime import date, timedelta
 
+SETTINGS = get_settings()
 DATA_DIRECTORY = "data"
 OUTPUT_DIRECTORY = "output"
 GITHUB_BASE_URL = "https://api.github.com/repos/"
+GITHUB_ACCESS_TOKEN = SETTINGS["github_access_token"]
+REPORT_WEEKS = get_report_weeks()
+REPORT_START_DATE = get_report_start_date_as_ISO_string()
+REPORT_END_DATE = get_report_end_date_as_datetime_obj()
 
 def run():
     """
     Generates a report of all closed github issues for att-projects repos.
     """
     create_directories()
-    get_issue_data()
+    store_issue_data()
     write_issue_report()
     cleanup_data_dir()
 
@@ -29,17 +34,17 @@ def create_directories():
     if not os.path.exists(OUTPUT_DIRECTORY):
         os.makedirs(OUTPUT_DIRECTORY)
 
-def get_issue_data():
+def store_issue_data():
     """
-    Gets repo issue data and saves to DATA_DIRECTORY, one file per repository.
-    Note that the data files saved are temporary and will be deleted.
+    Store's repo issue data and saves to DATA_DIRECTORY, one file per repository.
+    Note that the data files saved are temporary and will be deleted at the end of the script.
     """
     print "iterating over repos and saving closed issue data to data files..."
     repos = get_repos()
-    headers = { 'Authorization': 'token ' + get_github_access_token() }
+    headers = { 'Authorization': 'token ' + GITHUB_ACCESS_TOKEN }
     
     for repo in repos:
-        issues_url = GITHUB_BASE_URL + repo['owner'] + "/" + repo['name'] + "/issues?state=closed&per_page=100&since=" + get_report_start_date()
+        issues_url = GITHUB_BASE_URL + repo['owner'] + "/" + repo['name'] + "/issues?state=closed&per_page=100&since=" + REPORT_START_DATE
         github_response = requests.get(issues_url, headers=headers)
         
         json_data = github_response.json()
@@ -55,6 +60,9 @@ def get_issue_data():
 
         with open(DATA_DIRECTORY + "/" + repo['owner'] + "_" + repo['name'], 'w') as outfile:
             json.dump(json_data, outfile)
+
+def get_issue_data(repo):
+
 
 def get_repos():
     """
@@ -91,10 +99,8 @@ def write_issue_report():
     print "preparing report..."
     report = open(OUTPUT_DIRECTORY + "/report-" + time.strftime("%Y-%m-%dT%H:%M:%SZ") + ".txt", 'w')
     i = 0
-    report_weeks = get_report_weeks()
-    report_end_date = get_report_end_date()
-    while i < report_weeks:
-        week_end_date = report_end_date - timedelta(days = i * 7)
+    while i < REPORT_WEEKS:
+        week_end_date = REPORT_END_DATE - timedelta(days = i * 7)
         week_start_date = week_end_date - timedelta(days = 6)
         report_header = "Issues completed from " + week_start_date.strftime("%m/%d/%Y") + " to " + week_end_date.strftime("%m/%d/%Y")
         report.write("==============================================\n")
@@ -129,10 +135,6 @@ def cleanup_data_dir():
     for f in file_list:
         os.remove(DATA_DIRECTORY + "/" + f)
 
-def get_github_access_token():
-    settings = get_settings()
-    return settings["github_access_token"]
-
 def get_settings():
     """
     Create a dictionary of settings from settings.txt
@@ -155,7 +157,7 @@ def get_report_weeks():
         print "<report_weeks> required. Run with '--help' option for usage instructions."
         sys.exit()
 
-def get_report_start_date():
+def get_report_start_date_as_ISO_string():
     """
     Gets <report_start_date> command line argument and returns the date as an 
     ISO formatted timestamp to be passed to GitHub API when retreiving issues
@@ -168,7 +170,7 @@ def get_report_start_date():
         print "<report_start_date> required. Run with '--help' option for usage instructions."
         sys.exit()
 
-def get_report_end_date():
+def get_report_end_date_as_datetime_obj():
     """
     Gets the report_end_date and returns it as a datetime object
     """
