@@ -104,22 +104,22 @@ def write_issue_report():
         report.write(report_header)
         report.write("\n==============================================\n\n")
 
-        for data_file in os.listdir("data"):
-            updated = False
+        for repo_data_file in os.listdir("data"):
+            repo_header_added = False
 
-            with open("data/" + data_file) as df:    
+            with open("data/" + repo_data_file) as df:    
                 data = json.load(df)
 
             for issue in data:
                 issue_closed_at = dateutil.parser.parse(issue['closed_at']).date()
                 if week_end_date >= issue_closed_at >= week_start_date:
-                    if updated is False:
-                        updated = True
-                        repo_header = data_file.replace("_", "/")
+                    if not repo_header_added:
+                        repo_header = repo_data_file.replace("_", "/")
                         report.write("--------------------------------------\n" + repo_header + ":\n--------------------------------------\n\n")
+                        repo_header_added = True
                     line = ("* " + issue['title'] + "\n" + issue['html_url'] + "\n").encode('ascii', 'ignore').decode('ascii')
                     report.write(line)
-            if updated is True: 
+            if repo_header_added is True: 
                 report.write("\n")
 
 def cleanup_data_dir():
