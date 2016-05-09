@@ -9,7 +9,7 @@ from datetime import date, timedelta
 
 DATA_DIRECTORY = "data"
 OUTPUT_DIRECTORY = "output"
-GITHUB_BASE_URL = "https://api.github.com/repos/"
+GITHUB_BASE_URL = "https://api.github.com/"
 
 def run():
     """
@@ -31,7 +31,7 @@ def create_directories():
 
 def store_issue_data():
     """
-    Store's repo issue data and saves to DATA_DIRECTORY, one file per repository.
+    Writes repo issue data to DATA_DIRECTORY, one file per repository.
     Note that the data files saved are temporary and will be deleted at the end of the script.
     """
     print "iterating over repos and saving closed issue data to data files..."
@@ -43,8 +43,11 @@ def store_issue_data():
             json.dump(issue_data, outfile)
 
 def get_issue_data(repo):
+    """
+    Gets issue data for the given repo
+    """
     headers = { 'Authorization': 'token ' + get_settings()["github_access_token"] }
-    issues_url = GITHUB_BASE_URL + repo['owner'] + "/" + repo['name'] + "/issues?state=closed&per_page=100&since=" + get_report_start_date()
+    issues_url = GITHUB_BASE_URL + "repos/" + repo['owner'] + "/" + repo['name'] + "/issues?state=closed&per_page=100&since=" + get_report_start_date()
     json_data = []
     while True:
         try:
