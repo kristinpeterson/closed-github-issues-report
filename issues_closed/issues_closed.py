@@ -115,7 +115,8 @@ def write_issue_report():
                 if week_end_date >= issue_closed_at >= week_start_date:
                     if updated is False:
                         updated = True
-                        report.write("--------------------------------------\n" + data_file.replace("_", "/") + ":\n--------------------------------------\n\n")
+                        repo_header = data_file.replace("_", "/")
+                        report.write("--------------------------------------\n" + repo_header + ":\n--------------------------------------\n\n")
                     line = ("* " + issue['title'] + "\n" + issue['html_url'] + "\n").encode('ascii', 'ignore').decode('ascii')
                     report.write(line)
             if updated is True: 
